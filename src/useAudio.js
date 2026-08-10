@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// useAudio.js — Custom hook for ElevenLabs + browser TTS audio playback
+// useAudio.js — Custom hook for ElevenLabs + native-accent browser TTS
 // ─────────────────────────────────────────────────────────────────────────────
 import { useRef, useCallback } from 'react'
 import { synthesizeSpeech, playAudioUrl } from './elevenLabsService'
@@ -7,9 +7,20 @@ import useStore from './store'
 
 export default function useAudio() {
   const audioRef = useRef(null)
-  const { elevenLabsKey, selectedVoiceId, ttsSpeed, ttsStability, ttsSimilarityBoost, setPlaying, stopPlaying } = useStore()
+  const {
+    elevenLabsKey, selectedVoiceId,
+    ttsSpeed, ttsStability, ttsSimilarityBoost,
+    setPlaying, stopPlaying,
+  } = useStore()
 
-  const speak = useCallback((text, letterId = null) => {
+  /**
+   * Speak text with the configured voice.
+   * @param {string} text       - Text to speak
+   * @param {string} letterId   - Unique key used to track which slot is active
+   * @param {string} langCode   - BCP-47 language code for native voice selection (e.g. 'ru-RU')
+   * @returns {Promise<void>}   - Resolves when audio finishes
+   */
+  const speak = useCallback((text, letterId = null, langCode = 'en-US') => {
     // Stop any currently playing audio
     if (audioRef.current) {
       audioRef.current.pause()
@@ -29,9 +40,11 @@ export default function useAudio() {
           stability: ttsStability,
           similarityBoost: ttsSimilarityBoost,
           speed: ttsSpeed,
+          langCode,   // ← passed to fallback when no API key
         })
 
         if (url && url !== 'browser-tts') {
+          // ElevenLabs audio blob
           const audio = playAudioUrl(url, 1)
           audioRef.current = audio
           if (audio) {
@@ -41,9 +54,10 @@ export default function useAudio() {
             stopPlaying(); resolve()
           }
         } else {
-          // Browser TTS — estimate duration then resolve
-          const ms = text.length * 80 + 500
-          setTimeout(() => { stopPlaying(); resolve() }, ms)
+          // Browser TTS — fallbackTTS already awaited inside synthesizeSpeech,
+          // so by the time we get here the speech has finished (or is finishing)
+          stopPlaying()
+          resolve()
         }
       } catch (err) {
         console.warn('[useAudio] speak error:', err)

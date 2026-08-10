@@ -1,13 +1,70 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// elevenLabsService.js — ElevenLabs TTS integration
-// Uses the @elevenlabs/elevenlabs-js SDK + direct REST fallback
+// elevenLabsService.js — ElevenLabs TTS + native-accent browser voice fallback
 // ─────────────────────────────────────────────────────────────────────────────
 
 const BASE_URL = 'https://api.elevenlabs.io/v1'
 
+// ── Browser voice cache ───────────────────────────────────────────────────────
+let _voiceCache = null
+
+function getBrowserVoices() {
+  return new Promise((resolve) => {
+    const voices = window.speechSynthesis?.getVoices() ?? []
+    if (voices.length > 0) { resolve(voices); return }
+    // Chrome loads voices asynchronously
+    window.speechSynthesis.onvoiceschanged = () => resolve(window.speechSynthesis.getVoices())
+    // Timeout fallback
+    setTimeout(() => resolve(window.speechSynthesis?.getVoices() ?? []), 1000)
+  })
+}
+
 /**
- * Synthesize text to speech using ElevenLabs and return a playable audio blob URL.
- * Falls back to browser speechSynthesis if no API key is available.
+ * Pick the best available browser voice for a given BCP-47 language code.
+ * Priority: exact locale match > language prefix match > any online voice > first voice
+ */
+async function pickBrowserVoice(langCode = 'en-US') {
+  const voices = await getBrowserVoices()
+  if (voices.length === 0) return null
+
+  const lang = langCode.toLowerCase()
+  const prefix = lang.split('-')[0]
+
+  // 1. Exact locale, prefer "online" / "neural" / "natural" in name
+  let match = voices.find(v =>
+    v.lang.toLowerCase() === lang && isNaturalVoice(v)
+  )
+  // 2. Exact locale, any voice
+  if (!match) match = voices.find(v => v.lang.toLowerCase() === lang)
+  // 3. Language prefix, natural
+  if (!match) match = voices.find(v =>
+    v.lang.toLowerCase().startsWith(prefix) && isNaturalVoice(v)
+  )
+  // 4. Language prefix, any
+  if (!match) match = voices.find(v => v.lang.toLowerCase().startsWith(prefix))
+  // 5. Absolute fallback
+  if (!match) match = voices[0]
+
+  return match ?? null
+}
+
+function isNaturalVoice(v) {
+  const n = v.name.toLowerCase()
+  return (
+    v.localService === false ||   // cloud/online voices tend to be better
+    n.includes('neural') ||
+    n.includes('online') ||
+    n.includes('natural') ||
+    n.includes('enhanced') ||
+    n.includes('google') ||
+    n.includes('microsoft')
+  )
+}
+
+// ── ElevenLabs REST ───────────────────────────────────────────────────────────
+
+/**
+ * Synthesize text via ElevenLabs. Returns a blob URL or 'browser-tts' sentinel.
+ * Falls back gracefully when no API key is set.
  */
 export async function synthesizeSpeech({
   text,
@@ -15,10 +72,11 @@ export async function synthesizeSpeech({
   apiKey,
   stability = 0.55,
   similarityBoost = 0.75,
-  speed = 0.85,
+  speed = 0.9,
+  langCode = 'en-US',  // passed through to fallback
 }) {
   if (!apiKey) {
-    return fallbackTTS(text, speed)
+    return fallbackTTS(text, speed, langCode)
   }
 
   try {
@@ -49,7 +107,7 @@ export async function synthesizeSpeech({
     return URL.createObjectURL(blob)
   } catch (error) {
     console.warn('[ElevenLabs] Falling back to browser TTS:', error.message)
-    return fallbackTTS(text, speed)
+    return fallbackTTS(text, speed, langCode)
   }
 }
 
@@ -79,24 +137,37 @@ export async function fetchVoices(apiKey) {
 }
 
 /**
- * Browser SpeechSynthesis fallback for offline / no-key scenarios.
- * Returns a Promise that resolves when speech ends.
+ * Browser SpeechSynthesis fallback with native-accent voice selection.
+ * Returns 'browser-tts' sentinel — the caller handles the ended-promise.
+ *
+ * @param {string} text      - Text to speak
+ * @param {number} rate      - Speech rate (0.5–1.5)
+ * @param {string} langCode  - BCP-47 code e.g. 'ru-RU', 'he-IL', 'el-GR'
+ * @returns {Promise<string>} - Resolves with 'browser-tts' when speech ends
  */
-export function fallbackTTS(text, rate = 0.85) {
-  return new Promise((resolve) => {
-    if (!window.speechSynthesis) { resolve(null); return }
+export function fallbackTTS(text, rate = 0.9, langCode = 'en-US') {
+  return new Promise(async (resolve) => {
+    if (!window.speechSynthesis) { resolve('browser-tts'); return }
+
     window.speechSynthesis.cancel()
+
     const utt = new SpeechSynthesisUtterance(text)
+    utt.lang = langCode
     utt.rate = rate
-    utt.onend = () => resolve(null)
-    utt.onerror = () => resolve(null)
+
+    // Pick the best available native voice for this language
+    const voice = await pickBrowserVoice(langCode)
+    if (voice) utt.voice = voice
+
+    utt.onend   = () => resolve('browser-tts')
+    utt.onerror = () => resolve('browser-tts')
+
     window.speechSynthesis.speak(utt)
-    resolve('browser-tts') // resolve immediately so UI can respond
   })
 }
 
 /**
- * Play audio from a URL (blob or remote), returning the Audio element.
+ * Play audio from a blob URL, returning the Audio element.
  */
 export function playAudioUrl(url, speed = 1) {
   if (!url || url === 'browser-tts') return null

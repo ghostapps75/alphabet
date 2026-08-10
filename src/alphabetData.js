@@ -10,6 +10,8 @@ export const ALPHABETS = {
     accentClass: 'accent-english',
     color: '#6366f1',
     direction: 'ltr',
+    langCode: 'en-US',        // BCP-47 for browser TTS voice selection
+    voiceLang: 'en',          // short prefix for voice matching
     description: 'The Latin alphabet used for Modern English, consisting of 26 letters.',
     historicalNote: 'Derived from the Latin alphabet, which itself came from Greek via Etruscan. English uses 26 letters but relies heavily on digraphs for its rich sound system.',
     letters: [
@@ -49,6 +51,8 @@ export const ALPHABETS = {
     accentClass: 'accent-hebrew',
     color: '#f59e0b',
     direction: 'rtl',
+    langCode: 'he-IL',
+    voiceLang: 'he',
     description: 'The Hebrew alphabet (אָלֶף-בֵּית) consists of 22 consonants. Vowels are typically indicated by diacritics called nikud.',
     historicalNote: 'One of the oldest alphabets, descended from the Phoenician script. Modern Hebrew was revived in the 19th-20th centuries from ancient Biblical Hebrew.',
     letters: [
@@ -84,6 +88,8 @@ export const ALPHABETS = {
     accentClass: 'accent-bulgarian',
     color: '#22d3ee',
     direction: 'ltr',
+    langCode: 'bg-BG',
+    voiceLang: 'bg',
     description: 'Bulgarian uses the Cyrillic alphabet with 30 letters, making it the first Slavic language to use Cyrillic in literary form.',
     historicalNote: 'The Bulgarian Cyrillic alphabet was codified in medieval Bulgaria and spread throughout the Slavic world via Orthodox Christianity.',
     letters: [
@@ -127,6 +133,8 @@ export const ALPHABETS = {
     accentClass: 'accent-russian',
     color: '#f43f5e',
     direction: 'ltr',
+    langCode: 'ru-RU',
+    voiceLang: 'ru',
     description: 'The Russian Cyrillic alphabet has 33 letters and is the native writing system of the most widely spoken Slavic language.',
     historicalNote: 'Russian Cyrillic was reformed by Peter the Great in 1708 and again after the 1917 revolution, resulting in the modern 33-letter alphabet.',
     letters: [
@@ -173,6 +181,8 @@ export const ALPHABETS = {
     accentClass: 'accent-greek-modern',
     color: '#34d399',
     direction: 'ltr',
+    langCode: 'el-GR',
+    voiceLang: 'el',
     description: 'The Modern Greek alphabet has 24 letters and is the direct ancestor of the Latin and Cyrillic alphabets.',
     historicalNote: 'Modern Greek (Standard Modern Greek) evolved from Koine Greek and Byzantine Greek. The alphabet remains unchanged since antiquity, though pronunciation has shifted significantly.',
     letters: [
@@ -211,6 +221,8 @@ export const ALPHABETS = {
     color: '#a78bfa',
     direction: 'ltr',
     badge: 'Attic / Classical',
+    langCode: 'el-GR',        // closest available; Ancient Greek has no browser TTS
+    voiceLang: 'el',
     description: 'Ancient (Attic) Greek uses the same 24-letter alphabet but with distinct classical pronunciation. Vowels carry length distinctions and pitch accents.',
     historicalNote: 'Attic Greek was the prestige dialect of Classical Athens (5th–4th c. BCE), the language of Plato, Thucydides, and the tragedians. Its pronunciation differed markedly from Modern Greek — eta (η) was a long /ɛː/ not /i/, beta (β) was /b/ not /v/, and pitch accent carried grammatical meaning.',
     letters: [

@@ -271,21 +271,31 @@ export default function LessonView() {
   // Reset active key when letter changes
   useEffect(() => setPlayingKey(null), [letter.id])
 
-  // Helper: speak text and mark the right slot as active
-  const handleSlotAudio = async (slot, text) => {
+  const langCode = alphabet.langCode ?? 'en-US'
+
+  // Helper: speak text in the alphabet's language with the right native voice
+  const handleSlotAudio = async (slot, text, lang = langCode) => {
     const key = `${letter.id}-${slot}`
     setPlayingKey(key)
-    await speak(text, key)
+    await speak(text, key, lang)
     setPlayingKey(null)
   }
 
-  // Extract the native word from the example string like "Apple (tapuakh — apple)"
+  // Extract the native word from example strings like "Автобус (avtobus — bus)"
   const exampleRaw = letter.example ?? ''
-  const exampleWordOnly = exampleRaw.replace(/\s*\(.+\)$/, '').trim() || exampleRaw
+  const exampleParenMatch = exampleRaw.match(/^(.+?)\s*\((.+)\)$/)
+  const exampleNativeWord = exampleParenMatch ? exampleParenMatch[1].trim() : exampleRaw
+  // Transliteration used as spoken fallback for scripts with poor TTS support
+  const exampleTranslit   = exampleParenMatch
+    ? exampleParenMatch[2].split('—')[0].trim()   // e.g. "avtobus" from "avtobus — bus"
+    : ''
 
-  const handleNameAudio  = () => handleSlotAudio('name',  letter.name)
-  const handleSoundAudio = () => handleSlotAudio('sound', `The sound is: ${letter.sound}`)
-  const handleWordAudio  = () => handleSlotAudio('word',  exampleWordOnly)
+  // Letter name is always spoken in English (it's the Roman label, e.g. "Alpha", "Alef")
+  const handleNameAudio  = () => handleSlotAudio('name',  letter.name,        'en-US')
+  // Sound description in English too
+  const handleSoundAudio = () => handleSlotAudio('sound', `The sound is: ${letter.sound}`, 'en-US')
+  // Word: speak the native-script word in the alphabet's language
+  const handleWordAudio  = () => handleSlotAudio('word',  exampleNativeWord,  langCode)
 
   const handleMastered = () => {
     markLetterMastered(alphabet.id, letter.id)
