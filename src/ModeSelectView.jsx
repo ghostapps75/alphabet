@@ -12,7 +12,7 @@ const modes = [
     icon: <Zap size={28} />,
     title: 'Crash Course',
     tagline: 'Learn all letters fast',
-    color: '#6366f1',
+    color: '#c85b2a',
     description: 'Rapid-fire flashcard mode. See each letter, hear its sound, and move on. Perfect for getting a quick feel for a new script in under 10 minutes.',
     bullets: ['Flashcard-style navigation', 'Instant audio pronunciation', 'Letter → Sound focus', 'Progress-tracked'],
     time: '~10 min',
@@ -22,7 +22,7 @@ const modes = [
     icon: <BookOpen size={28} />,
     title: 'Deep Study',
     tagline: 'Master every nuance',
-    color: '#34d399',
+    color: '#3a7a7a',
     description: 'Structured, in-depth lessons. Each letter comes with full IPA phonetics, contextual word examples, cultural notes, and AI-generated usage sentences.',
     bullets: ['Full IPA transcription', 'AI word examples', 'Historical & cultural notes', 'Ancient/Modern Greek bridge'],
     time: '20–40 min',
@@ -32,7 +32,7 @@ const modes = [
     icon: <Brain size={28} />,
     title: 'Quiz Mode',
     tagline: 'Test your knowledge',
-    color: '#f59e0b',
+    color: '#c9941a',
     description: 'Dynamic AI-generated multiple-choice quizzes testing letter recognition, sounds, word examples, and cultural knowledge at your chosen depth.',
     bullets: ['AI-generated questions', 'Multiple-choice format', 'Instant explanations', 'Score tracking'],
     time: 'Your pace',
@@ -86,7 +86,7 @@ export default function ModeSelectView() {
             {alphabet.letters[0]?.char}
           </div>
           <div>
-            <h2 className="text-2xl font-black" style={{ color: 'var(--c-text)' }}>{alphabet.name}</h2>
+            <h2 className="text-2xl font-black" style={{ color: 'var(--c-text)', fontFamily: 'var(--font-display)' }}>{alphabet.name}</h2>
             <p className="text-lg" style={{ color: alphabet.color }}>{alphabet.nativeName}</p>
           </div>
         </div>

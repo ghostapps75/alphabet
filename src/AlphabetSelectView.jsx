@@ -37,7 +37,7 @@ export default function AlphabetSelectView() {
           <ArrowLeft size={15} />
           Back to Home
         </button>
-        <h2 className="text-3xl font-black tracking-tight" style={{ color: 'var(--c-text)' }}>
+        <h2 className="text-3xl font-black tracking-tight" style={{ color: 'var(--c-text)', fontFamily: 'var(--font-display)' }}>
           Choose a Script
         </h2>
         <p className="mt-1 text-sm" style={{ color: 'var(--c-sub)' }}>

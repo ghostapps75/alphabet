@@ -26,17 +26,17 @@ export default function NavBar() {
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between px-5 py-3 border-b"
-            style={{ background: 'rgba(8,9,13,0.85)', backdropFilter: 'blur(20px)', borderColor: 'var(--c-border)' }}>
+            style={{ background: 'rgba(245,239,230,0.92)', backdropFilter: 'blur(16px)', borderColor: 'var(--c-border)' }}>
       {/* Left: Logo + Breadcrumbs */}
       <div className="flex items-center gap-3 min-w-0">
         {/* Logo */}
         <button onClick={() => setView(VIEWS.HOME)}
                 className="flex items-center gap-2 shrink-0 group">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold"
-               style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold font-display"
+               style={{ background: 'linear-gradient(135deg, #c85b2a, #d4912a)' }}>
             Α
           </div>
-          <span className="font-bold text-sm tracking-wide gradient-text hidden sm:block">Alphabets</span>
+          <span className="font-bold text-base tracking-wide hidden sm:block" style={{ color: 'var(--c-text)', fontFamily: 'var(--font-display)' }}>Alphabets</span>
         </button>
 
         {/* Breadcrumbs */}
@@ -70,7 +70,7 @@ export default function NavBar() {
             animate={{ scale: [1, 1.15, 1] }}
             transition={{ repeat: Infinity, duration: 0.6 }}
             className="w-2 h-2 rounded-full"
-            style={{ background: 'var(--c-emerald)', boxShadow: '0 0 8px rgba(52,211,153,0.6)' }}
+            style={{ background: 'var(--c-sage)', boxShadow: '0 0 8px rgba(125,148,103,0.6)' }}
           />
         )}
 

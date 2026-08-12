@@ -21,7 +21,7 @@ function SliderRow({ label, value, min, max, step = 0.01, onChange, display }) {
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="w-full accent-indigo-500 h-1.5 rounded-full appearance-none cursor-pointer"
-        style={{ accentColor: 'var(--c-indigo)' }}
+        style={{ accentColor: 'var(--c-terracotta)' }}
       />
     </div>
   )
@@ -37,7 +37,7 @@ function ToggleRow({ label, checked, onChange, description }) {
       <button
         onClick={() => onChange(!checked)}
         className="relative w-10 h-6 rounded-full transition-all"
-        style={{ background: checked ? 'var(--c-indigo)' : 'var(--c-border)' }}
+        style={{ background: checked ? 'var(--c-terracotta)' : 'var(--c-border)' }}
       >
         <motion.div
           animate={{ x: checked ? 18 : 2 }}
@@ -111,7 +111,7 @@ export default function SettingsPanel() {
         {/* ── Voice Profile ────────────────────────────────── */}
         <section>
           <div className="flex items-center gap-2 mb-3">
-            <Volume2 size={14} style={{ color: 'var(--c-indigo)' }} />
+            <Volume2 size={14} style={{ color: 'var(--c-terracotta)' }} />
             <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--c-sub)' }}>
               Voice Profile
             </h3>
@@ -123,8 +123,8 @@ export default function SettingsPanel() {
                 onClick={() => setVoice(voice.id)}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all"
                 style={{
-                  background: selectedVoiceId === voice.id ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${selectedVoiceId === voice.id ? 'rgba(99,102,241,0.4)' : 'transparent'}`,
+                  background: selectedVoiceId === voice.id ? 'rgba(200,91,42,0.12)' : 'rgba(0,0,0,0.02)',
+                  border: `1px solid ${selectedVoiceId === voice.id ? 'rgba(200,91,42,0.4)' : 'transparent'}`,
                 }}
               >
                 <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold"

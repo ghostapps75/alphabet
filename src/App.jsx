@@ -41,14 +41,14 @@ export default function App() {
 
   return (
     <div className="relative flex flex-col min-h-dvh bg-mesh" style={{ background: 'var(--c-bg)' }}>
-      {/* Ambient background orbs */}
+      {/* Ambient warm background orbs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full"
-             style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)' }} />
+             style={{ background: 'radial-gradient(circle, rgba(200,91,42,0.07) 0%, transparent 70%)' }} />
         <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full"
-             style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.07) 0%, transparent 70%)' }} />
+             style={{ background: 'radial-gradient(circle, rgba(212,145,42,0.06) 0%, transparent 70%)' }} />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full"
-             style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.04) 0%, transparent 70%)' }} />
+             style={{ background: 'radial-gradient(circle, rgba(58,122,122,0.04) 0%, transparent 70%)' }} />
       </div>
 
       {/* Top Navigation */}
@@ -82,7 +82,7 @@ export default function App() {
               exit={{ opacity: 0 }}
               onClick={closeVoiceSettings}
               className="fixed inset-0 z-40"
-              style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+              style={{ background: 'rgba(44,31,14,0.35)', backdropFilter: 'blur(6px)' }}
             />
             {/* Panel */}
             <motion.div
