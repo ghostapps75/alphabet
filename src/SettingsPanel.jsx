@@ -83,27 +83,30 @@ export default function SettingsPanel() {
             </h3>
           </div>
           <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-            {VOICE_PROFILES.map((voice) => (
-              <button
-                key={voice.id}
-                onClick={() => setVoice(voice.id)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all"
-                style={{
-                  background: selectedVoiceId === voice.id ? 'rgba(200,91,42,0.12)' : 'rgba(0,0,0,0.02)',
-                  border: `1px solid ${selectedVoiceId === voice.id ? 'rgba(200,91,42,0.4)' : 'transparent'}`,
-                }}
-              >
-                <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold"
-                     style={{ background: 'rgba(99,102,241,0.2)', color: 'var(--c-indigo)' }}>
-                  {voice.name[0]}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate" style={{ color: 'var(--c-text)' }}>{voice.name}</p>
-                  <p className="text-xs truncate" style={{ color: 'var(--c-muted)' }}>{voice.description}</p>
-                </div>
-                {selectedVoiceId === voice.id && <Check size={14} style={{ color: 'var(--c-indigo)', shrink: 0 }} />}
-              </button>
-            ))}
+            {VOICE_PROFILES.map((voice) => {
+              const isSelected = selectedVoiceId === voice.id || selectedVoiceId === voice.name
+              return (
+                <button
+                  key={voice.id}
+                  onClick={() => setVoice(voice.id)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all"
+                  style={{
+                    background: isSelected ? 'rgba(200,91,42,0.12)' : 'rgba(0,0,0,0.02)',
+                    border: `1px solid ${isSelected ? 'rgba(200,91,42,0.4)' : 'transparent'}`,
+                  }}
+                >
+                  <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold"
+                       style={{ background: 'rgba(99,102,241,0.2)', color: 'var(--c-indigo)' }}>
+                    {voice.name[0]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: 'var(--c-text)' }}>{voice.name}</p>
+                    <p className="text-xs truncate" style={{ color: 'var(--c-muted)' }}>{voice.description}</p>
+                  </div>
+                  {isSelected && <Check size={14} style={{ color: 'var(--c-indigo)', shrink: 0 }} />}
+                </button>
+              )
+            })}
           </div>
 
           {/* Preview */}

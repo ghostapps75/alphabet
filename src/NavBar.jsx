@@ -13,7 +13,7 @@ export default function NavBar() {
   } = useStore()
 
   const alphabet = selectedAlphabetId ? ALPHABETS[selectedAlphabetId] : null
-  const voiceName = VOICE_PROFILES.find(v => v.id === selectedVoiceId)?.name ?? selectedVoiceId
+  const voiceName = VOICE_PROFILES.find(v => v.id === selectedVoiceId || v.name === selectedVoiceId)?.name ?? 'Rachel'
 
   // Build breadcrumb trail
   const crumbs = [{ label: 'Alphabets', view: VIEWS.HOME }]

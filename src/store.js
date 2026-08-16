@@ -6,14 +6,14 @@ import { persist } from 'zustand/middleware'
 
 // ── Default voice profiles ──────────────────────────────────────────────────
 export const VOICE_PROFILES = [
-  { id: 'Rachel',       name: 'Rachel',       description: 'Clear, warm American English',  lang: 'en-US' },
-  { id: 'Adam',         name: 'Adam',         description: 'Deep, authoritative English',    lang: 'en-US' },
-  { id: 'Bella',        name: 'Bella',        description: 'Soft, expressive English',       lang: 'en-US' },
-  { id: 'Antoni',       name: 'Antoni',       description: 'Well-rounded, calm English',     lang: 'en-US' },
-  { id: 'Josh',         name: 'Josh',         description: 'Young, energetic English',       lang: 'en-US' },
-  { id: 'Arnold',       name: 'Arnold',       description: 'Crisp, confident English',       lang: 'en-US' },
-  { id: 'Domi',         name: 'Domi',         description: 'Strong, clear English',          lang: 'en-US' },
-  { id: 'Elli',         name: 'Elli',         description: 'Emotional, conversational',      lang: 'en-US' },
+  { id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel', description: 'Clear, warm American English',  lang: 'en-US' },
+  { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam',   description: 'Deep, authoritative English',    lang: 'en-US' },
+  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella',  description: 'Soft, expressive English',       lang: 'en-US' },
+  { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni', description: 'Well-rounded, calm English',     lang: 'en-US' },
+  { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh',   description: 'Young, energetic English',       lang: 'en-US' },
+  { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold', description: 'Crisp, confident English',       lang: 'en-US' },
+  { id: 'AZnzlk1XvdvUeBnXmlld', name: 'Domi',   description: 'Strong, clear English',          lang: 'en-US' },
+  { id: 'MF3mGyEYCl7XYWbV9V6O', name: 'Elli',   description: 'Emotional, conversational',      lang: 'en-US' },
 ]
 
 // ── Learning modes ──────────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ const useStore = create(
       setQuizScore: (score) => set({ quizScore: score }),
 
       // ── Voice / TTS settings ───────────────────────────────────────────
-      selectedVoiceId: 'Rachel',
+      selectedVoiceId: '21m00Tcm4TlvDq8ikWAM',
       ttsSpeed: 0.85,           // 0.5 – 1.5
       ttsStability: 0.55,
       ttsSimilarityBoost: 0.75,

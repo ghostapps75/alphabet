@@ -7,6 +7,38 @@
 
 const ELEVENLABS_BASE = 'https://api.elevenlabs.io/v1'
 
+const VOICE_MAP = {
+  rachel: '21m00Tcm4TlvDq8ikWAM',
+  adam: 'pNInz6obpgDQGcFmaJgB',
+  bella: 'EXAVITQu4vr4xnSDxMaL',
+  antoni: 'ErXwobaYiN019PkySvjV',
+  josh: 'TxGEqnHWrfWFTfGW9XjX',
+  arnold: 'VR6AewLTigWG4xSOukaG',
+  domi: 'AZnzlk1XvdvUeBnXmlld',
+  elli: 'MF3mGyEYCl7XYWbV9V6O',
+  sam: 'yoZ06aMxZJJ28mfd3POQ',
+  nicole: 'piTKgcLEGmPE4e6mEKli',
+  glinda: 'z9fAnlkpzviPz146aGWa',
+  giovanni: 'zcAAsFlAT2tBZWNxI5PB',
+  mimi: 'zrHiDhphv9ZnVXBqCLjz',
+  fin: 'D38z5RcWu1voky8WS1ja',
+  callum: 'N2lVS1w4EtoT3dr4eOWO',
+  charlie: 'IKne3meq5aSn9XLyUdCD',
+  george: 'JBFqnCBsd6RMkjVDRZzb',
+  charlotte: 'XB0fDUnXU5powFXDhCwa',
+  alice: 'Xb7hH8MSUJpSbSDYk0k2',
+  bill: 'pqHfZKP75CvOlQylNhV4',
+  brian: 'nPczCjzI2devNBz1zQrb',
+  daniel: 'onwK4e9ZLuTAKqWW03F9',
+  lily: 'pFZP5JQG7iQjIQuC4Bku',
+}
+
+function resolveVoiceId(id) {
+  if (!id) return '21m00Tcm4TlvDq8ikWAM'
+  const lower = String(id).toLowerCase()
+  return VOICE_MAP[lower] || id
+}
+
 exports.handler = async (event) => {
   // Only allow POST
   if (event.httpMethod !== 'POST') {
@@ -28,7 +60,7 @@ exports.handler = async (event) => {
 
   const {
     text,
-    voiceId = 'Rachel',
+    voiceId: rawVoiceId,
     stability = 0.55,
     similarityBoost = 0.75,
     speed = 0.9,
@@ -37,6 +69,8 @@ exports.handler = async (event) => {
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Missing required field: text.' }) }
   }
+
+  const voiceId = resolveVoiceId(rawVoiceId)
 
   try {
     const response = await fetch(`${ELEVENLABS_BASE}/text-to-speech/${voiceId}`, {
@@ -62,7 +96,7 @@ exports.handler = async (event) => {
       console.error(`[tts] ElevenLabs error ${response.status}:`, errText)
       return {
         statusCode: response.status,
-        body: JSON.stringify({ error: `ElevenLabs error: ${response.status}` }),
+        body: JSON.stringify({ error: `ElevenLabs error: ${response.status}`, details: errText }),
       }
     }
 

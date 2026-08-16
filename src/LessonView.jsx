@@ -56,7 +56,12 @@ function AudioBtn({ label, phonetic, onClick, active, color, icon }) {
 }
 
 // ── Letter Card (flip-reveal) ────────────────────────────────────────────────
-function LetterCard({ letter, alphabet, flipped, onFlip, onNameAudio, onSoundAudio, onWordAudio, playingKey }) {
+function LetterCard({ letter, alphabet, onNameAudio, onSoundAudio, onWordAudio, playingKey }) {
+  const [flipped, setFlipped] = useState(false)
+
+  // Reset flip when letter changes
+  useEffect(() => setFlipped(false), [letter.id])
+
   // Split example string into native word + English gloss for display
   const exampleRaw = letter.example ?? ''
   const exampleParenMatch = exampleRaw.match(/^(.+?)\s*\((.+)\)$/)
@@ -65,13 +70,14 @@ function LetterCard({ letter, alphabet, flipped, onFlip, onNameAudio, onSoundAud
 
   return (
     <div
-      className="letter-card-container w-full max-w-sm aspect-[3/4] cursor-pointer select-none mx-auto"
-      onClick={onFlip}
+      className={`letter-card w-72 mx-auto select-none ${flipped ? 'flipped' : ''}`}
+      style={{ height: '22rem' }}
+      onClick={() => setFlipped(f => !f)}
     >
-      <div className={`letter-card-inner w-full h-full ${flipped ? 'flipped' : ''}`}>
+      <div className="letter-card-inner w-full h-full">
         {/* ── Front: the letter character ── */}
         <div
-          className="letter-card-front w-full h-full glass rounded-3xl flex flex-col items-center justify-between p-6"
+          className="letter-card-front w-full h-full glass rounded-3xl flex flex-col items-center justify-between p-6 select-none"
           style={{ border: `2px solid ${alphabet.color}30`, boxShadow: `0 0 40px ${alphabet.color}20` }}
         >
           <div className="w-full flex items-center justify-between">
@@ -93,6 +99,7 @@ function LetterCard({ letter, alphabet, flipped, onFlip, onNameAudio, onSoundAud
             <p className="text-lg font-bold" style={{ color: 'var(--c-text)' }}>{letter.name}</p>
             <p className="text-sm font-mono mt-0.5" style={{ color: alphabet.color }}>{letter.ipa || letter.sound}</p>
           </div>
+          <p className="text-xs" style={{ color: 'var(--c-muted)' }}>Tap to hear pronunciation</p>
         </div>
 
         {/* ── Back: three audio controls ── */}
