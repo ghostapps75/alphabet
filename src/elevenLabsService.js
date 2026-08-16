@@ -61,30 +61,40 @@ async function pickBrowserVoice(langCode = 'en-US') {
 
 /**
  * Browser SpeechSynthesis fallback with native-accent voice selection.
- * Returns 'browser-tts' sentinel — the caller handles the ended-promise.
+ * If the browser doesn't have a voice for the target script, uses fallbackText (transliteration).
  *
- * @param {string} text      - Text to speak
- * @param {number} rate      - Speech rate (0.5–1.5)
- * @param {string} langCode  - BCP-47 code e.g. 'ru-RU', 'he-IL', 'el-GR'
- * @returns {Promise<string>} - Resolves with 'browser-tts' when speech ends
+ * @param {string} text          - Text to speak
+ * @param {number} rate          - Speech rate (0.5–1.5)
+ * @param {string} langCode      - BCP-47 code e.g. 'ru-RU', 'he-IL', 'el-GR'
+ * @param {string} fallbackText  - Romanized fallback for English-only browser TTS engines
+ * @returns {Promise<string>}   - Resolves with 'browser-tts' when speech ends
  */
-export function fallbackTTS(text, rate = 0.9, langCode = 'en-US') {
+export function fallbackTTS(text, rate = 0.9, langCode = 'en-US', fallbackText = text) {
   return new Promise((resolve) => {
     if (!window.speechSynthesis) { resolve('browser-tts'); return }
 
     window.speechSynthesis.cancel()
 
-    const utt = new SpeechSynthesisUtterance(text)
-    utt.lang = langCode
-    utt.rate = rate
-
-    utt.onend   = () => resolve('browser-tts')
-    utt.onerror = () => resolve('browser-tts')
+    const prefix = langCode.toLowerCase().split('-')[0]
 
     pickBrowserVoice(langCode).then((voice) => {
+      const hasMatchingVoice = voice && voice.lang.toLowerCase().startsWith(prefix)
+      const spokenText = hasMatchingVoice ? text : (fallbackText || text)
+
+      const utt = new SpeechSynthesisUtterance(spokenText)
+      utt.lang = hasMatchingVoice ? langCode : 'en-US'
+      utt.rate = rate
       if (voice) utt.voice = voice
+
+      utt.onend   = () => resolve('browser-tts')
+      utt.onerror = () => resolve('browser-tts')
+
       window.speechSynthesis.speak(utt)
     }).catch(() => {
+      const utt = new SpeechSynthesisUtterance(fallbackText || text)
+      utt.rate = rate
+      utt.onend   = () => resolve('browser-tts')
+      utt.onerror = () => resolve('browser-tts')
       window.speechSynthesis.speak(utt)
     })
   })
@@ -95,11 +105,12 @@ export function fallbackTTS(text, rate = 0.9, langCode = 'en-US') {
  */
 export async function synthesizeSpeech({
   text,
-  voiceId = 'Rachel',
+  voiceId = '21m00Tcm4TlvDq8ikWAM',
   stability = 0.55,
   similarityBoost = 0.75,
   speed = 0.9,
-  langCode = 'en-US',  // passed through to fallback
+  langCode = 'en-US',
+  fallbackText = text,
 }) {
   try {
     const response = await fetch('/.netlify/functions/tts', {
@@ -136,7 +147,7 @@ export async function synthesizeSpeech({
     return URL.createObjectURL(blob)
   } catch (error) {
     console.warn('[ElevenLabs proxy] Falling back to browser TTS:', error.message)
-    return fallbackTTS(text, speed, langCode)
+    return fallbackTTS(text, speed, langCode, fallbackText)
   }
 }
 

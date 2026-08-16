@@ -18,12 +18,13 @@ export default function useAudio() {
 
   /**
    * Speak text with the configured voice.
-   * @param {string} text       - Text to speak
-   * @param {string} letterId   - Unique key used to track which slot is active
-   * @param {string} langCode   - BCP-47 language code for native voice selection (e.g. 'ru-RU')
-   * @returns {Promise<void>}   - Resolves when audio finishes
+   * @param {string} text          - Text to speak (native script)
+   * @param {string} letterId      - Unique key used to track which slot is active
+   * @param {string} langCode      - BCP-47 language code for native voice selection (e.g. 'ru-RU')
+   * @param {string} fallbackText  - Romanized fallback for English-only browser TTS engines
+   * @returns {Promise<void>}      - Resolves when audio finishes
    */
-  const speak = useCallback((text, letterId = null, langCode = 'en-US') => {
+  const speak = useCallback((text, letterId = null, langCode = 'en-US', fallbackText = text) => {
     // Stop any currently playing audio
     if (audioRef.current) {
       audioRef.current.pause()
@@ -40,6 +41,7 @@ export default function useAudio() {
       similarityBoost: ttsSimilarityBoost,
       speed: ttsSpeed,
       langCode,
+      fallbackText,
     }).then((url) => {
       if (url && url !== 'browser-tts') {
         const audio = playAudioUrl(url, 1)

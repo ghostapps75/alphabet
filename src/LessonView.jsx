@@ -219,25 +219,26 @@ export default function LessonView() {
 
   const langCode = alphabet.langCode ?? 'en-US'
 
-  // Helper: speak text in the alphabet's language with the right native voice
-  const handleSlotAudio = async (slot, text, lang = langCode) => {
-    const key = `${letter.id}-${slot}`
-    setPlayingKey(key)
-    await speak(text, key, lang)
-    setPlayingKey(null)
-  }
-
   // Extract the native word from example strings like "Автобус (avtobus — bus)"
   const exampleRaw = letter.example ?? ''
   const exampleParenMatch = exampleRaw.match(/^(.+?)\s*\((.+)\)$/)
   const exampleNativeWord = exampleParenMatch ? exampleParenMatch[1].trim() : exampleRaw
+  const exampleTranslit   = exampleParenMatch ? exampleParenMatch[2].split('—')[0].trim() : exampleRaw
+
+  // Helper: speak text in the alphabet's language with the right native voice
+  const handleSlotAudio = async (slot, text, lang = langCode, fallbackText = text) => {
+    const key = `${letter.id}-${slot}`
+    setPlayingKey(key)
+    await speak(text, key, lang, fallbackText)
+    setPlayingKey(null)
+  }
 
   // Letter name is always spoken in English (it's the Roman label, e.g. "Alpha", "Alef")
   const handleNameAudio  = () => handleSlotAudio('name',  letter.name,        'en-US')
   // Sound description in English too
   const handleSoundAudio = () => handleSlotAudio('sound', `The sound is: ${letter.sound}`, 'en-US')
-  // Word: speak the native-script word in the alphabet's language
-  const handleWordAudio  = () => handleSlotAudio('word',  exampleNativeWord,  langCode)
+  // Word: speak the native-script word in the alphabet's language, with transliteration fallback
+  const handleWordAudio  = () => handleSlotAudio('word',  exampleNativeWord,  langCode, exampleTranslit)
 
   const handleMastered = () => {
     markLetterMastered(alphabet.id, letter.id)
