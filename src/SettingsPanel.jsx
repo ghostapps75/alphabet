@@ -1,13 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// SettingsPanel.jsx — Voice settings, API keys, and display preferences
+// SettingsPanel.jsx — Voice settings, audio quality, and display preferences
 // ─────────────────────────────────────────────────────────────────────────────
-import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
-  X, Volume2, Key, Eye, Sliders, Play, RefreshCw, Check,
+  X, Volume2, Eye, Sliders, Play, Check,
 } from 'lucide-react'
 import useStore, { VOICE_PROFILES } from './store'
-import { fetchVoices } from './elevenLabsService'
 import useAudio from './useAudio'
 
 function SliderRow({ label, value, min, max, step = 0.01, onChange, display }) {
@@ -56,44 +54,12 @@ export default function SettingsPanel() {
     ttsSpeed, setTtsSpeed,
     ttsStability, setTtsStability,
     ttsSimilarityBoost, setTtsSimilarityBoost,
-    elevenLabsKey, setElevenLabsKey,
-    openAiKey, setOpenAiKey,
-    geminiKey, setGeminiKey,
-    aiProvider, setAiProvider,
     showIpa, toggleShowIpa,
     showExamples, toggleShowExamples,
     autoPlayAudio, toggleAutoPlay,
   } = useStore()
 
   const { speak } = useAudio()
-  const [customVoices, setCustomVoices] = useState([])
-  const [loadingVoices, setLoadingVoices] = useState(false)
-  const [savedKeys, setSavedKeys] = useState(false)
-
-  const [localElKey, setLocalElKey] = useState(elevenLabsKey)
-  const [localOaKey, setLocalOaKey] = useState(openAiKey)
-  const [localGemKey, setLocalGemKey] = useState(geminiKey)
-
-  const allVoices = [...VOICE_PROFILES, ...customVoices]
-
-  const loadVoices = async () => {
-    if (!elevenLabsKey) return
-    setLoadingVoices(true)
-    const voices = await fetchVoices(elevenLabsKey)
-    setCustomVoices(voices.filter(v => !VOICE_PROFILES.find(p => p.id === v.id)))
-    setLoadingVoices(false)
-  }
-
-  useEffect(() => { loadVoices() }, [elevenLabsKey])
-
-  const saveKeys = () => {
-    setElevenLabsKey(localElKey)
-    setOpenAiKey(localOaKey)
-    setGeminiKey(localGemKey)
-    setSavedKeys(true)
-    setTimeout(() => setSavedKeys(false), 2000)
-    if (localElKey) loadVoices()
-  }
 
   return (
     <div className="glass-strong h-full flex flex-col overflow-hidden">
@@ -117,7 +83,7 @@ export default function SettingsPanel() {
             </h3>
           </div>
           <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-            {allVoices.map((voice) => (
+            {VOICE_PROFILES.map((voice) => (
               <button
                 key={voice.id}
                 onClick={() => setVoice(voice.id)}
@@ -138,14 +104,6 @@ export default function SettingsPanel() {
                 {selectedVoiceId === voice.id && <Check size={14} style={{ color: 'var(--c-indigo)', shrink: 0 }} />}
               </button>
             ))}
-            {loadingVoices && (
-              <div className="flex items-center gap-2 py-2 px-3 text-xs" style={{ color: 'var(--c-muted)' }}>
-                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-                  <RefreshCw size={11} />
-                </motion.div>
-                Loading your ElevenLabs voices…
-              </div>
-            )}
           </div>
 
           {/* Preview */}
@@ -193,74 +151,6 @@ export default function SettingsPanel() {
           </div>
         </section>
 
-        {/* ── AI Provider ───────────────────────────────────── */}
-        <section>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs">🤖</span>
-            <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--c-sub)' }}>
-              AI Provider
-            </h3>
-          </div>
-          <div className="flex gap-2">
-            {['gemini', 'openai'].map((p) => (
-              <button key={p} onClick={() => setAiProvider(p)}
-                      className="flex-1 py-2 rounded-xl text-xs font-medium capitalize transition-all"
-                      style={{
-                        background: aiProvider === p ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
-                        border: `1px solid ${aiProvider === p ? 'rgba(99,102,241,0.5)' : 'var(--c-border)'}`,
-                        color: aiProvider === p ? 'var(--c-indigo)' : 'var(--c-sub)',
-                      }}>
-                {p === 'gemini' ? '✦ Gemini' : '⬡ OpenAI'}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* ── API Keys ──────────────────────────────────────── */}
-        <section>
-          <div className="flex items-center gap-2 mb-3">
-            <Key size={14} style={{ color: 'var(--c-indigo)' }} />
-            <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--c-sub)' }}>
-              API Keys
-            </h3>
-          </div>
-          <div className="space-y-3">
-            {[
-              { label: 'ElevenLabs', value: localElKey, onChange: setLocalElKey, placeholder: 'el-...' },
-              { label: 'OpenAI', value: localOaKey, onChange: setLocalOaKey, placeholder: 'sk-...' },
-              { label: 'Gemini', value: localGemKey, onChange: setLocalGemKey, placeholder: 'AIza...' },
-            ].map(({ label, value, onChange, placeholder }) => (
-              <div key={label}>
-                <label className="text-xs mb-1 block" style={{ color: 'var(--c-muted)' }}>{label}</label>
-                <input
-                  type="password"
-                  value={value}
-                  onChange={(e) => onChange(e.target.value)}
-                  placeholder={placeholder}
-                  className="w-full px-3 py-2 rounded-lg text-xs outline-none transition-all"
-                  style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid var(--c-border)',
-                    color: 'var(--c-text)',
-                  }}
-                  onFocus={e => e.target.style.borderColor = 'var(--c-indigo)'}
-                  onBlur={e => e.target.style.borderColor = 'var(--c-border)'}
-                />
-              </div>
-            ))}
-            <motion.button
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-              onClick={saveKeys}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold btn-primary text-white"
-            >
-              {savedKeys ? <><Check size={13} /> Saved!</> : 'Save API Keys'}
-            </motion.button>
-          </div>
-          <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--c-muted)' }}>
-            Keys are stored locally in your browser. Without keys the app uses browser speech synthesis and static quiz questions.
-          </p>
-        </section>
       </div>
     </div>
   )

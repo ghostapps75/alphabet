@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // LessonView.jsx — Core letter learning experience for Crash Course & Deep Study
 // ─────────────────────────────────────────────────────────────────────────────
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, Volume2, CheckCircle2, RefreshCw,
@@ -10,7 +10,6 @@ import {
 import useStore, { VIEWS, LEARNING_MODES } from './store'
 import { ALPHABETS } from './alphabetData'
 import useAudio from './useAudio'
-import { generateWordExamples, generateLetterNote, generateGreekBridgeNote } from './aiService'
 
 // ── Audio trigger button used on the card back ────────────────────────────────
 function AudioBtn({ label, phonetic, onClick, active, color, icon }) {
@@ -41,25 +40,24 @@ function AudioBtn({ label, phonetic, onClick, active, color, icon }) {
           {label}
         </p>
         {phonetic && (
-          <p className="text-xs font-mono mt-0.5 truncate" style={{ color: 'var(--c-sub)' }}>
+          <p className="text-[11px] truncate leading-tight mt-0.5" style={{ color: 'var(--c-muted)' }}>
             {phonetic}
           </p>
         )}
       </div>
+      {active && (
+        <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+              style={{ background: color, color: '#fff' }}>
+          playing
+        </span>
+      )}
     </motion.button>
   )
 }
 
 // ── Letter Card (flip-reveal) ────────────────────────────────────────────────
-function LetterCard({ letter, alphabet, onNameAudio, onSoundAudio, onWordAudio, playingKey }) {
-  const [flipped, setFlipped] = useState(false)
-  const { showIpa } = useStore()
-
-  // Reset flip when letter changes
-  useEffect(() => setFlipped(false), [letter.id])
-
+function LetterCard({ letter, alphabet, flipped, onFlip, onNameAudio, onSoundAudio, onWordAudio, playingKey }) {
   // Split example string into native word + English gloss for display
-  // e.g. "Apple (Tapuakh — apple)" → "Apple" + "Tapuakh — apple"
   const exampleRaw = letter.example ?? ''
   const exampleParenMatch = exampleRaw.match(/^(.+?)\s*\((.+)\)$/)
   const exampleWord = exampleParenMatch ? exampleParenMatch[1].trim() : exampleRaw
@@ -67,21 +65,25 @@ function LetterCard({ letter, alphabet, onNameAudio, onSoundAudio, onWordAudio, 
 
   return (
     <div
-      className={`letter-card w-72 mx-auto ${flipped ? 'flipped' : ''}`}
-      style={{ height: '22rem' }}
-      onClick={() => setFlipped(f => !f)}
+      className="letter-card-container w-full max-w-sm aspect-[3/4] cursor-pointer select-none mx-auto"
+      onClick={onFlip}
     >
-      <div className="letter-card-inner w-full h-full">
+      <div className={`letter-card-inner w-full h-full ${flipped ? 'flipped' : ''}`}>
         {/* ── Front: the letter character ── */}
         <div
-          className="letter-card-front w-full h-full glass rounded-3xl flex flex-col items-center justify-center gap-4 select-none"
+          className="letter-card-front w-full h-full glass rounded-3xl flex flex-col items-center justify-between p-6"
           style={{ border: `2px solid ${alphabet.color}30`, boxShadow: `0 0 40px ${alphabet.color}20` }}
         >
+          <div className="w-full flex items-center justify-between">
+            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full"
+                  style={{ background: `${alphabet.color}20`, color: alphabet.color }}>
+              #{letter.position}
+            </span>
+          </div>
           <motion.div
             key={letter.id}
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className="text-9xl font-black leading-none"
             style={{ color: alphabet.color, textShadow: `0 0 60px ${alphabet.color}50` }}
           >
@@ -89,11 +91,8 @@ function LetterCard({ letter, alphabet, onNameAudio, onSoundAudio, onWordAudio, 
           </motion.div>
           <div className="text-center">
             <p className="text-lg font-bold" style={{ color: 'var(--c-text)' }}>{letter.name}</p>
-            {showIpa && (
-              <p className="text-sm font-mono mt-0.5" style={{ color: 'var(--c-sub)' }}>{letter.ipa}</p>
-            )}
+            <p className="text-sm font-mono mt-0.5" style={{ color: alphabet.color }}>{letter.ipa || letter.sound}</p>
           </div>
-          <p className="text-xs" style={{ color: 'var(--c-muted)' }}>Tap to hear pronunciation</p>
         </div>
 
         {/* ── Back: three audio controls ── */}
@@ -101,47 +100,16 @@ function LetterCard({ letter, alphabet, onNameAudio, onSoundAudio, onWordAudio, 
           className="letter-card-back w-full h-full glass rounded-3xl flex flex-col justify-center gap-2 px-5 select-none"
           style={{ border: `2px solid ${alphabet.color}40`, background: `${alphabet.color}06` }}
         >
-          {/* Letter glyph mini-header */}
           <div className="flex items-center gap-2 mb-1">
             <span className="text-3xl font-black" style={{ color: alphabet.color }}>{letter.char}</span>
             <div>
               <p className="text-xs font-bold" style={{ color: 'var(--c-text)' }}>{letter.name}</p>
-              {showIpa && <p className="text-xs font-mono" style={{ color: 'var(--c-sub)' }}>{letter.ipa}</p>}
             </div>
           </div>
 
-          {/* 1 — Letter name */}
-          <AudioBtn
-            label="Letter name"
-            phonetic={letter.name}
-            onClick={onNameAudio}
-            active={playingKey === `${letter.id}-name`}
-            color={alphabet.color}
-            icon={<Mic size={13} />}
-          />
-
-          {/* 2 — Phoneme sound */}
-          <AudioBtn
-            label="Sound it makes"
-            phonetic={letter.ipa ? `IPA: ${letter.ipa}` : letter.sound}
-            onClick={onSoundAudio}
-            active={playingKey === `${letter.id}-sound`}
-            color={alphabet.color}
-            icon={<Volume2 size={13} />}
-          />
-
-          {/* 3 — Word example */}
-          <AudioBtn
-            label={exampleWord || 'Word example'}
-            phonetic={[
-              exampleGloss,
-              letter.examplePhonetic,
-            ].filter(Boolean).join('  ·  ')}
-            onClick={onWordAudio}
-            active={playingKey === `${letter.id}-word`}
-            color={alphabet.color}
-            icon={<Volume2 size={13} />}
-          />
+          <AudioBtn label="Letter name" phonetic={letter.name} onClick={onNameAudio} active={playingKey === `${letter.id}-name`} color={alphabet.color} icon={<Mic size={13} />} />
+          <AudioBtn label="Sound it makes" phonetic={letter.ipa ? `IPA: ${letter.ipa}` : letter.sound} onClick={onSoundAudio} active={playingKey === `${letter.id}-sound`} color={alphabet.color} icon={<Volume2 size={13} />} />
+          <AudioBtn label={exampleWord || 'Word example'} phonetic={exampleGloss} onClick={onWordAudio} active={playingKey === `${letter.id}-word`} color={alphabet.color} icon={<Volume2 size={13} />} />
 
           <p className="text-xs text-center mt-1" style={{ color: 'var(--c-muted)' }}>Tap card to flip back</p>
         </div>
@@ -150,95 +118,65 @@ function LetterCard({ letter, alphabet, onNameAudio, onSoundAudio, onWordAudio, 
   )
 }
 
-// ── Deep Study extras (AI-powered) ────────────────────────────────────────────
+// ── Deep Study extras ─────────────────────────────────────────────────────────
 function DeepStudyPanel({ letter, alphabet }) {
-  const [examples, setExamples] = useState([])
-  const [note, setNote] = useState(null)
-  const [bridgeNote, setBridgeNote] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const { aiProvider, openAiKey, geminiKey } = useStore()
-
   const isGreek = alphabet.id === 'greekAncient'
-
-  const loadAI = useCallback(async () => {
-    if (!openAiKey && !geminiKey) return
-    setLoading(true)
-    try {
-      const [exs, n, bn] = await Promise.all([
-        generateWordExamples({ letter, alphabetName: alphabet.name, provider: aiProvider, openAiKey, geminiKey }),
-        generateLetterNote({ letter, alphabetName: alphabet.name, provider: aiProvider, openAiKey, geminiKey }),
-        isGreek ? generateGreekBridgeNote({ letter, provider: aiProvider, openAiKey, geminiKey }) : Promise.resolve(null),
-      ])
-      setExamples(exs)
-      setNote(n)
-      setBridgeNote(bn)
-    } catch { /* silently fail */ }
-    setLoading(false)
-  }, [letter.id, aiProvider, openAiKey, geminiKey])
-
-  useEffect(() => { loadAI() }, [letter.id])
 
   return (
     <div className="space-y-4 mt-6">
-      {/* Cultural note */}
-      {note && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                    className="glass rounded-xl p-4 flex gap-3">
+      {/* Script & Historical Context */}
+      {alphabet.historicalNote && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass rounded-xl p-4 flex gap-3"
+        >
           <Info size={16} className="shrink-0 mt-0.5" style={{ color: alphabet.color }} />
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--c-sub)' }}>{note}</p>
+          <div>
+            <p className="text-xs font-bold mb-1" style={{ color: alphabet.color }}>About {alphabet.name} Script</p>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--c-sub)' }}>{alphabet.historicalNote}</p>
+          </div>
         </motion.div>
       )}
 
       {/* Ancient/Modern Greek bridge */}
-      {bridgeNote && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                    className="glass rounded-xl p-4 flex gap-3"
-                    style={{ border: '1px solid rgba(167,139,250,0.2)' }}>
+      {isGreek && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass rounded-xl p-4 flex gap-3"
+          style={{ border: '1px solid rgba(167,139,250,0.2)' }}
+        >
           <Sparkles size={16} className="shrink-0 mt-0.5" style={{ color: '#a78bfa' }} />
           <div>
-            <p className="text-xs font-bold mb-1" style={{ color: '#a78bfa' }}>Ancient → Modern</p>
-            <p className="text-sm leading-relaxed" style={{ color: 'var(--c-sub)' }}>{bridgeNote}</p>
+            <p className="text-xs font-bold mb-1" style={{ color: '#a78bfa' }}>Ancient vs Modern Pronunciation</p>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--c-sub)' }}>
+              In Classical Attic Greek, {letter.char} represented {letter.ipa || letter.sound}. In Modern Greek, the sound shifted to match contemporary Byzantine and Greek phonology.
+            </p>
           </div>
         </motion.div>
       )}
 
-      {/* Word examples */}
-      {examples.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                    className="glass rounded-xl p-4">
+      {/* Word & Phonetic Details */}
+      {letter.example && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass rounded-xl p-4"
+        >
           <h4 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--c-muted)' }}>
-            Word Examples
+            Linguistic Breakdown
           </h4>
-          <div className="space-y-3">
-            {examples.map((ex, i) => (
-              <div key={i} className="border-l-2 pl-3" style={{ borderColor: alphabet.color }}>
-                <p className="text-lg font-bold" style={{ color: alphabet.color }}>{ex.word}</p>
-                <p className="text-xs font-mono" style={{ color: 'var(--c-sub)' }}>{ex.transliteration} · {ex.meaning}</p>
-                {ex.sentence && (
-                  <p className="text-xs mt-1 italic" style={{ color: 'var(--c-muted)' }}>
-                    "{ex.sentence}" — {ex.sentenceTranslation}
-                  </p>
-                )}
-              </div>
-            ))}
+          <div className="border-l-2 pl-3" style={{ borderColor: alphabet.color }}>
+            <p className="text-lg font-bold" style={{ color: alphabet.color }}>{letter.example}</p>
+            <p className="text-xs font-mono" style={{ color: 'var(--c-sub)' }}>
+              Phonetic: {letter.examplePhonetic || letter.ipa || letter.sound}
+            </p>
+            <p className="text-xs mt-1" style={{ color: 'var(--c-muted)' }}>
+              Letter {letter.name} ({letter.char} {letter.lower && letter.lower !== letter.char ? `/ ${letter.lower}` : ''}) is letter #{letter.position} in the {alphabet.name} alphabet.
+            </p>
           </div>
         </motion.div>
-      )}
-
-      {/* Loading state */}
-      {loading && (
-        <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--c-sub)' }}>
-          <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-            <RefreshCw size={12} />
-          </motion.div>
-          Generating AI examples…
-        </div>
-      )}
-
-      {!openAiKey && !geminiKey && (
-        <p className="text-xs" style={{ color: 'var(--c-muted)' }}>
-          ⚙️ Add an OpenAI or Gemini API key in Settings to enable AI-generated examples.
-        </p>
       )}
     </div>
   )
@@ -249,27 +187,28 @@ export default function LessonView() {
   const {
     selectedAlphabetId, learningMode, currentLetterIndex,
     nextLetter, prevLetter, setView, markLetterMastered, masteredLetters, resetLesson,
-    isPlaying, playingLetterId,
   } = useStore()
   const { speak } = useAudio()
 
   // Track which of the three audio slots is active, e.g. "en-a-name" | "en-a-sound" | "en-a-word"
   const [playingKey, setPlayingKey] = useState(null)
 
-  const alphabet = ALPHABETS[selectedAlphabetId]
-  if (!alphabet) { setView(VIEWS.ALPHABET_SELECT); return null }
-
-  const letters = alphabet.letters
+  const alphabet = selectedAlphabetId ? ALPHABETS[selectedAlphabetId] : null
+  const letters = alphabet?.letters ?? []
   const letter = letters[currentLetterIndex]
+
+  // Reset active key when letter changes (Hook called unconditionally)
+  useEffect(() => {
+    setPlayingKey(null)
+  }, [letter?.id])
+
+  if (!alphabet) { setView(VIEWS.ALPHABET_SELECT); return null }
+  if (!letter) return null
+
   const isCrash = learningMode === LEARNING_MODES.CRASH_COURSE
   const mastered = masteredLetters[alphabet.id] ?? []
   const isCurrentMastered = mastered.includes(letter?.id)
   const progress = ((currentLetterIndex + 1) / letters.length) * 100
-
-  if (!letter) return null
-
-  // Reset active key when letter changes
-  useEffect(() => setPlayingKey(null), [letter.id])
 
   const langCode = alphabet.langCode ?? 'en-US'
 
@@ -285,10 +224,6 @@ export default function LessonView() {
   const exampleRaw = letter.example ?? ''
   const exampleParenMatch = exampleRaw.match(/^(.+?)\s*\((.+)\)$/)
   const exampleNativeWord = exampleParenMatch ? exampleParenMatch[1].trim() : exampleRaw
-  // Transliteration used as spoken fallback for scripts with poor TTS support
-  const exampleTranslit   = exampleParenMatch
-    ? exampleParenMatch[2].split('—')[0].trim()   // e.g. "avtobus" from "avtobus — bus"
-    : ''
 
   // Letter name is always spoken in English (it's the Roman label, e.g. "Alpha", "Alef")
   const handleNameAudio  = () => handleSlotAudio('name',  letter.name,        'en-US')

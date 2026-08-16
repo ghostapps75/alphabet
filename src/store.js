@@ -35,7 +35,7 @@ export const VIEWS = {
 
 const useStore = create(
   persist(
-    (set, get) => ({
+    (set) => ({
       // ── Navigation ─────────────────────────────────────────────────────
       currentView: VIEWS.HOME,
       setView: (view) => set({ currentView: view }),
@@ -88,18 +88,6 @@ const useStore = create(
       toggleVoiceSettings: () => set((s) => ({ voiceSettingsOpen: !s.voiceSettingsOpen })),
       closeVoiceSettings: () => set({ voiceSettingsOpen: false }),
 
-      // ── API keys (stored, never sent to 3rd parties other than the APIs) ─
-      elevenLabsKey: import.meta.env.VITE_ELEVENLABS_API_KEY ?? '',
-      openAiKey: import.meta.env.VITE_OPENAI_API_KEY ?? '',
-      geminiKey: import.meta.env.VITE_GEMINI_API_KEY ?? '',
-      setElevenLabsKey: (k) => set({ elevenLabsKey: k }),
-      setOpenAiKey: (k) => set({ openAiKey: k }),
-      setGeminiKey: (k) => set({ geminiKey: k }),
-
-      // ── Preferred AI provider for dynamic content ──────────────────────
-      aiProvider: 'gemini',  // 'gemini' | 'openai'
-      setAiProvider: (p) => set({ aiProvider: p }),
-
       // ── UI theme / display prefs ───────────────────────────────────────
       showIpa: true,
       showExamples: true,
@@ -110,7 +98,7 @@ const useStore = create(
       toggleAutoPlay: () => set((s) => ({ autoPlayAudio: !s.autoPlayAudio })),
       setCardGroupSize: (n) => set({ cardGroupSize: n }),
 
-      // ── Dynamic AI content cache ───────────────────────────────────────
+      // ── Dynamic content cache ──────────────────────────────────────────
       dynamicExamples: {},  // { [letterId]: string }
       setDynamicExample: (letterId, text) =>
         set((s) => ({ dynamicExamples: { ...s.dynamicExamples, [letterId]: text } })),
@@ -123,17 +111,13 @@ const useStore = create(
     }),
     {
       name: 'alphabets-store',
-      // Only persist settings, keys, and progress — not transient UI state
+      // Only persist settings and progress — not transient UI state
       partialize: (s) => ({
         masteredLetters: s.masteredLetters,
         selectedVoiceId: s.selectedVoiceId,
         ttsSpeed: s.ttsSpeed,
         ttsStability: s.ttsStability,
         ttsSimilarityBoost: s.ttsSimilarityBoost,
-        elevenLabsKey: s.elevenLabsKey,
-        openAiKey: s.openAiKey,
-        geminiKey: s.geminiKey,
-        aiProvider: s.aiProvider,
         showIpa: s.showIpa,
         showExamples: s.showExamples,
         autoPlayAudio: s.autoPlayAudio,

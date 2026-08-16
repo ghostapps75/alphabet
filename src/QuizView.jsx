@@ -1,16 +1,53 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// QuizView.jsx — AI-generated multiple-choice quiz experience
+// QuizView.jsx — Multiple-choice quiz experience
 // ─────────────────────────────────────────────────────────────────────────────
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, RefreshCw, Trophy, CheckCircle2, XCircle, Brain } from 'lucide-react'
-import useStore, { VIEWS, LEARNING_MODES } from './store'
+import useStore, { VIEWS } from './store'
 import { ALPHABETS } from './alphabetData'
-import { generateQuizQuestions } from './aiService'
 
-function buildFallbackQuestions(letters, count = 10) {
+function buildQuizQuestions(letters, alphabetName, count = 10) {
   const shuffled = [...letters].sort(() => Math.random() - 0.5).slice(0, count)
   return shuffled.map((l, i) => {
+    // Alternate question types: letter_to_sound vs sound_to_letter vs letter_to_name
+    const qType = i % 3 === 0 ? 'letter_to_sound' : i % 3 === 1 ? 'sound_to_letter' : 'letter_to_name'
+    
+    if (qType === 'sound_to_letter') {
+      const distractors = letters
+        .filter(x => x.id !== l.id)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3)
+        .map(x => x.char)
+      const options = [l.char, ...distractors].sort(() => Math.random() - 0.5)
+      return {
+        id: `q${i}`,
+        type: 'sound_to_letter',
+        question: `Which ${alphabetName} letter makes the sound "${l.sound}"?`,
+        options,
+        correctIndex: options.indexOf(l.char),
+        explanation: `The letter "${l.char}" (${l.name}) corresponds to the sound: ${l.sound} (IPA: ${l.ipa || l.sound}).`,
+      }
+    }
+
+    if (qType === 'letter_to_name') {
+      const distractors = letters
+        .filter(x => x.id !== l.id)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3)
+        .map(x => x.name)
+      const options = [l.name, ...distractors].sort(() => Math.random() - 0.5)
+      return {
+        id: `q${i}`,
+        type: 'letter_to_name',
+        question: `What is the name of the letter "${l.char}"?`,
+        options,
+        correctIndex: options.indexOf(l.name),
+        explanation: `"${l.char}" is called "${l.name}" (makes the sound: ${l.sound}).`,
+      }
+    }
+
+    // Default: letter_to_sound
     const distractors = letters
       .filter(x => x.id !== l.id)
       .sort(() => Math.random() - 0.5)
@@ -23,36 +60,27 @@ function buildFallbackQuestions(letters, count = 10) {
       question: `What sound does the letter "${l.char}" (${l.name}) make?`,
       options,
       correctIndex: options.indexOf(l.sound),
-      explanation: `The letter ${l.char} is called "${l.name}" and makes the sound: ${l.sound} (IPA: ${l.ipa}).`,
+      explanation: `The letter "${l.char}" (${l.name}) makes the sound: ${l.sound} (IPA: ${l.ipa || l.sound}).`,
     }
   })
 }
 
 export default function QuizView() {
   const {
-    selectedAlphabetId, learningMode, setView,
+    selectedAlphabetId, setView,
     quizQuestions, quizAnswers, quizScore,
     setQuizQuestions, answerQuiz, setQuizScore,
-    aiProvider, openAiKey, geminiKey,
   } = useStore()
 
-  const alphabet = ALPHABETS[selectedAlphabetId]
+  const alphabet = selectedAlphabetId ? ALPHABETS[selectedAlphabetId] : null
   const [loading, setLoading] = useState(false)
   const [currentQ, setCurrentQ] = useState(0)
   const [selectedOption, setSelectedOption] = useState(null)
   const [showFeedback, setShowFeedback] = useState(false)
   const [done, setDone] = useState(false)
 
-  if (!alphabet) { setView(VIEWS.ALPHABET_SELECT); return null }
-
-  const mode = learningMode ?? LEARNING_MODES.CRASH_COURSE
-
-  // Load questions on mount
-  useEffect(() => {
-    loadQuestions()
-  }, [])
-
-  const loadQuestions = async () => {
+  const loadQuestions = useCallback(() => {
+    if (!alphabet) return
     setLoading(true)
     setCurrentQ(0)
     setSelectedOption(null)
@@ -60,24 +88,21 @@ export default function QuizView() {
     setDone(false)
     setQuizScore(null)
 
-    let qs = []
-    if (openAiKey || geminiKey) {
-      qs = await generateQuizQuestions({
-        letters: alphabet.letters,
-        alphabetName: alphabet.name,
-        mode,
-        count: 10,
-        provider: aiProvider,
-        openAiKey,
-        geminiKey,
-      })
-    }
-    if (!qs || qs.length === 0) {
-      qs = buildFallbackQuestions(alphabet.letters, 10)
-    }
+    const qs = buildQuizQuestions(alphabet.letters, alphabet.name, 10)
     setQuizQuestions(qs)
     setLoading(false)
-  }
+  }, [alphabet, setQuizQuestions, setQuizScore])
+
+  // Load questions on mount / alphabet change
+  useEffect(() => {
+    if (!alphabet) {
+      setView(VIEWS.ALPHABET_SELECT)
+      return
+    }
+    loadQuestions()
+  }, [alphabet, setView, loadQuestions])
+
+  if (!alphabet) return null
 
   const questions = quizQuestions
   const question = questions[currentQ]
@@ -173,7 +198,7 @@ export default function QuizView() {
           <Brain size={32} style={{ color: alphabet.color }} />
         </motion.div>
         <p className="text-sm" style={{ color: 'var(--c-sub)' }}>
-          {openAiKey || geminiKey ? 'Generating AI quiz questions…' : 'Preparing your quiz…'}
+          Preparing your quiz…
         </p>
       </div>
     )

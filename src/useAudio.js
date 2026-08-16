@@ -8,9 +8,12 @@ import useStore from './store'
 export default function useAudio() {
   const audioRef = useRef(null)
   const {
-    elevenLabsKey, selectedVoiceId,
-    ttsSpeed, ttsStability, ttsSimilarityBoost,
-    setPlaying, stopPlaying,
+    selectedVoiceId,
+    ttsSpeed,
+    ttsStability,
+    ttsSimilarityBoost,
+    setPlaying,
+    stopPlaying,
   } = useStore()
 
   /**
@@ -30,42 +33,33 @@ export default function useAudio() {
 
     if (letterId) setPlaying(letterId)
 
-    // Return a Promise that resolves when playback ends
-    return new Promise(async (resolve) => {
-      try {
-        const url = await synthesizeSpeech({
-          text,
-          voiceId: selectedVoiceId,
-          apiKey: elevenLabsKey,
-          stability: ttsStability,
-          similarityBoost: ttsSimilarityBoost,
-          speed: ttsSpeed,
-          langCode,   // ← passed to fallback when no API key
-        })
-
-        if (url && url !== 'browser-tts') {
-          // ElevenLabs audio blob
-          const audio = playAudioUrl(url, 1)
-          audioRef.current = audio
-          if (audio) {
+    return synthesizeSpeech({
+      text,
+      voiceId: selectedVoiceId,
+      stability: ttsStability,
+      similarityBoost: ttsSimilarityBoost,
+      speed: ttsSpeed,
+      langCode,
+    }).then((url) => {
+      if (url && url !== 'browser-tts') {
+        const audio = playAudioUrl(url, 1)
+        audioRef.current = audio
+        if (audio) {
+          return new Promise((resolve) => {
             audio.onended = () => { stopPlaying(); resolve() }
             audio.onerror = () => { stopPlaying(); resolve() }
-          } else {
-            stopPlaying(); resolve()
-          }
+          })
         } else {
-          // Browser TTS — fallbackTTS already awaited inside synthesizeSpeech,
-          // so by the time we get here the speech has finished (or is finishing)
           stopPlaying()
-          resolve()
         }
-      } catch (err) {
-        console.warn('[useAudio] speak error:', err)
+      } else {
         stopPlaying()
-        resolve()
       }
+    }).catch((err) => {
+      console.warn('[useAudio] speak error:', err)
+      stopPlaying()
     })
-  }, [elevenLabsKey, selectedVoiceId, ttsSpeed, ttsStability, ttsSimilarityBoost, setPlaying, stopPlaying])
+  }, [selectedVoiceId, ttsSpeed, ttsStability, ttsSimilarityBoost, setPlaying, stopPlaying])
 
   const stop = useCallback(() => {
     if (audioRef.current) {

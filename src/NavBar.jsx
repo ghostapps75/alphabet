@@ -2,13 +2,13 @@
 // NavBar.jsx — Top navigation bar with breadcrumbs and voice settings trigger
 // ─────────────────────────────────────────────────────────────────────────────
 import { motion } from 'framer-motion'
-import { Settings, Volume2, ChevronRight, Home } from 'lucide-react'
+import { Settings, Volume2, ChevronRight } from 'lucide-react'
 import useStore, { VIEWS, VOICE_PROFILES } from './store'
 import { ALPHABETS } from './alphabetData'
 
 export default function NavBar() {
   const {
-    currentView, selectedAlphabetId, learningMode,
+    currentView, selectedAlphabetId,
     setView, toggleVoiceSettings, selectedVoiceId, isPlaying,
   } = useStore()
 
