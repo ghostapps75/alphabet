@@ -39,7 +39,7 @@ function resolveVoiceId(id) {
   return VOICE_MAP[lower] || id
 }
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   // Only allow POST
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' }
