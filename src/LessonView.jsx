@@ -234,7 +234,13 @@ export default function LessonView() {
   }
 
   // Letter name is always spoken in English (it's the Roman label, e.g. "Alpha", "Alef")
-  const handleNameAudio  = () => handleSlotAudio('name',  letter.name,        'en-US')
+  const handleNameAudio = () => {
+    let spokenName = letter.name;
+    const match = spokenName.match(/\((.*?)\)/);
+    if (match) spokenName = match[1];
+    spokenName = spokenName.replace(/\//g, 'or');
+    handleSlotAudio('name', spokenName, 'en-US');
+  }
   // Sound description in English too
   const handleSoundAudio = () => handleSlotAudio('sound', `The sound is: ${getPhoneticTTS(letter.sound)}`, 'en-US')
   // Word: speak the native-script word in the alphabet's language, with transliteration fallback
