@@ -8,7 +8,7 @@ import {
   Sparkles, Info, ChevronLeft, ChevronRight, Mic,
 } from 'lucide-react'
 import useStore, { VIEWS, LEARNING_MODES } from './store'
-import { ALPHABETS } from './alphabetData'
+import { ALPHABETS, getPhoneticTTS } from './alphabetData'
 import useAudio from './useAudio'
 
 // ── Audio trigger button used on the card back ────────────────────────────────
@@ -236,7 +236,7 @@ export default function LessonView() {
   // Letter name is always spoken in English (it's the Roman label, e.g. "Alpha", "Alef")
   const handleNameAudio  = () => handleSlotAudio('name',  letter.name,        'en-US')
   // Sound description in English too
-  const handleSoundAudio = () => handleSlotAudio('sound', `The sound is: ${letter.sound}`, 'en-US')
+  const handleSoundAudio = () => handleSlotAudio('sound', `The sound is: ${getPhoneticTTS(letter.sound)}`, 'en-US')
   // Word: speak the native-script word in the alphabet's language, with transliteration fallback
   const handleWordAudio  = () => handleSlotAudio('word',  exampleNativeWord,  langCode, exampleTranslit)
 
